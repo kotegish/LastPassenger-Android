@@ -5,9 +5,10 @@
   const ctx = canvas.getContext("2d", { alpha: false });
   const image = new Image();
   image.src = "assets/train_panorama.png";
+  image.onerror = () => console.error("Не удалось загрузить assets/train_panorama.png");
 
-  const WORLD = { width: 1536, height: 512, floorY: 365 };
-  const player = { x: 130, y: WORLD.floorY - 42, w: 24, h: 42, vx: 0, vy: 0, speed: 230, jump: 520, grounded: true };
+  const WORLD = { width: 1536, height: 512, floorY: 354 };
+  const player = { x: 130, y: WORLD.floorY - 20, w: 9, h: 20, vx: 0, vy: 0, speed: 230, jump: 520, grounded: true };
   const input = { left: false, right: false, jump: false, jumpQueued: false };
   const camera = { x: 0 };
   let width = 0, height = 0, scale = 1, lastTime = 0;
@@ -23,7 +24,7 @@
     canvas.style.height = height + "px";
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // Keep the camera close to one wagon in width; the visible area is about 1.25 wagons.
-    scale = width / 330;
+    scale = width / 390;
   }
 
   function bindButton(id, down, up) {
@@ -76,48 +77,27 @@
     camera.x = Math.max(0, Math.min(WORLD.width - viewportWorldWidth, camera.x));
   }
 
-  function drawBackground() {
-    const vw = width / scale;
-    const vh = height / scale;
-    const top = WORLD.floorY - vh * 0.72;
-
+  function drawTrain() {
+    // The train panorama is one static foreground image. No sky/bridge layers and no parallax.
     if (image.complete && image.naturalWidth) {
-      // Independent horizontal offsets create depth while retaining the original panorama.
-      const drawStrip = (sy, sh, factor) => {
-        const offset = camera.x * (1 - factor);
-        const x = ((offset % WORLD.width) + WORLD.width) % WORLD.width - WORLD.width;
-        ctx.drawImage(image, 0, sy, WORLD.width, sh, x, sy, WORLD.width, sh);
-        ctx.drawImage(image, 0, sy, WORLD.width, sh, x + WORLD.width, sy, WORLD.width, sh);
-      };
-      drawStrip(0, 160, 0.18);       // distant sky and city
-      drawStrip(105, 265, 1.0);      // train and walkable wagon roofs/platform
-      drawStrip(365, 147, 1.08);    // foreground viaduct
-    } else {
-      ctx.fillStyle = "#151b2a";
-      ctx.fillRect(camera.x, top, vw, vh);
-      ctx.fillStyle = "#34394a";
-      ctx.fillRect(camera.x, WORLD.floorY, vw, 6);
-      ctx.fillStyle = "#e2c27e";
-      ctx.font = "10px monospace";
-      ctx.fillText("ФОН НЕ НАЙДЕН: assets/train_panorama.png", camera.x + 12, top + 24);
+      ctx.drawImage(image, 0, 0, WORLD.width, WORLD.height);
     }
   }
   function draw() {
     const vh = height / scale;
     const top = WORLD.floorY - vh * 0.72;
-    ctx.fillStyle = "#111725";
-    ctx.fillRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
 
     ctx.save();
     ctx.scale(scale, scale);
     ctx.translate(-camera.x, -top);
-    drawBackground();
+    drawTrain();
 
-    // Temporary player placeholder. Collision body is 24 x 42 world units.
+    // Small temporary player placeholder. Collision body is 9 x 20 world units.
     ctx.fillStyle = "#e5c17b";
     ctx.fillRect(Math.round(player.x - player.w / 2), Math.round(player.y), player.w, player.h);
     ctx.fillStyle = "#252a35";
-    ctx.fillRect(player.x - 7, player.y + 7, 14, 9);
+    ctx.fillRect(player.x - 3, player.y + 4, 6, 5);
     ctx.restore();
   }
 
