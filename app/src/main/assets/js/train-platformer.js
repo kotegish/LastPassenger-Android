@@ -6,6 +6,9 @@
   const image = new Image();
   image.src = "assets/train_panorama.png";
   image.onerror = () => console.error("Не удалось загрузить assets/train_panorama.png");
+  const heroImage = new Image();
+  heroImage.src = "assets/hero.png";
+  heroImage.onerror = () => console.error("Не удалось загрузить assets/hero.png");
 
   const WORLD = { width: 1536, height: 512, floorY: 288 };
   const WAGONS = [
@@ -18,7 +21,7 @@
   ];
   const DOOR_RADIUS = 43;
   const EDGE_MARGIN = 24;
-  const player = { x: 130, y: WORLD.floorY - 50, w: 22.5, h: 50, vx: 0, vy: 0, speed: 230, jump: 520, grounded: true };
+  const player = { x: 130, y: WORLD.floorY - 50, w: 22.5, h: 50, renderH: 76, vx: 0, vy: 0, speed: 230, jump: 520, grounded: true, facing: 1 };
   const input = { left: false, right: false, jump: false, jumpQueued: false };
   const camera = { x: 0 };
   const transition = { active: false, phase: "none", timer: 0, duration: 0.38, targetX: 0, targetWagon: 0 };
@@ -125,6 +128,7 @@
     const maxX = wagon.right - (activeWagon < WAGONS.length - 1 ? EDGE_MARGIN : player.w / 2);
 
     player.vx = axis * player.speed;
+    if (axis !== 0) player.facing = axis;
     player.x += player.vx * dt;
     player.x = Math.max(minX, Math.min(maxX, player.x));
 
@@ -181,6 +185,17 @@
   }
 
   function drawPlayer() {
+    if (heroImage.complete && heroImage.naturalWidth > 0) {
+      const renderW = player.renderH * heroImage.naturalWidth / heroImage.naturalHeight;
+      const feetY = WORLD.floorY;
+      ctx.save();
+      ctx.translate(player.x, feetY);
+      ctx.scale(player.facing, 1);
+      ctx.drawImage(heroImage, -renderW / 2, -player.renderH, renderW, player.renderH);
+      ctx.restore();
+      return;
+    }
+    // Fallback silhouette is shown only while the hero PNG is loading or unavailable.
     ctx.fillStyle = "#e5c17b";
     ctx.fillRect(Math.round(player.x - player.w / 2), Math.round(player.y), player.w, player.h);
     ctx.fillStyle = "#252a35";
