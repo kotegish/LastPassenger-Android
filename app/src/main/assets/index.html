@@ -24,7 +24,10 @@
 (()=> {
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),stick=document.getElementById('stick'),nub=document.getElementById('nub');
 let W=0,H=0,started=false,hp=100,memory=0,last=0,spawn=0,attackCd=0,skillCd=0,dashCd=0,bossSpawned=false,boss=null,toast='',toastTime=0,wave=1,waveSpawned=0,waveQuota=5,waveBreak=0,paused=false,bestWave=1,bestMemory=0;
-try{bestWave=Math.max(1,Number(localStorage.getItem('lp_best_wave'))||1);bestMemory=Math.max(0,Number(localStorage.getItem('lp_best_memory'))||0)}catch(e){}\nfunction saveRecords(){try{localStorage.setItem('lp_best_wave',String(bestWave));localStorage.setItem('lp_best_memory',String(bestMemory))}catch(e){}}\nfunction updateRecord(){bestWave=Math.max(bestWave,wave);bestMemory=Math.max(bestMemory,memory);saveRecords();let el=document.getElementById('best');if(el)el.textContent=bestWave+' / '+bestMemory}\nconst world={w:1900,h:1300},player={x:950,y:650,faceX:1,faceY:0,inv:0},input={x:0,y:0};
+try{bestWave=Math.max(1,Number(localStorage.getItem('lp_best_wave'))||1);bestMemory=Math.max(0,Number(localStorage.getItem('lp_best_memory'))||0)}catch(e){}
+function saveRecords(){try{localStorage.setItem('lp_best_wave',String(bestWave));localStorage.setItem('lp_best_memory',String(bestMemory))}catch(e){}}
+function updateRecord(){bestWave=Math.max(bestWave,wave);bestMemory=Math.max(bestMemory,memory);saveRecords();let el=document.getElementById('best');if(el)el.textContent=bestWave+' / '+bestMemory}
+const world={w:1900,h:1300},player={x:950,y:650,faceX:1,faceY:0,inv:0},input={x:0,y:0};
 let enemies=[],shards=[],particles=[],props=[],playerShots=[],gearDrops=[],gearBag=[],gearKills=0,equipped={weapon:null,armor:null,artifact:null};
 function resize(){W=canvas.width=innerWidth*devicePixelRatio;H=canvas.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}addEventListener('resize',resize);resize();
 function say(s){toast=s;toastTime=2.2}
