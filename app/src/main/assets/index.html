@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#080b12">
+<title>Последний пассажир</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b12;color:#e8e4d8;font-family:Georgia,serif;touch-action:none}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+#hud{position:fixed;inset:0;pointer-events:none}
+.panel{position:absolute;background:#111925dd;border:1px solid #687383;border-radius:7px;padding:8px 12px;box-shadow:0 3px 18px #0009}
+#brand{top:10px;left:12px;font-size:12px;letter-spacing:2px;color:#c5a66a}
+#stats{top:34px;left:12px;font:12px monospace}
+#hint{top:10px;right:12px;font:11px monospace;color:#aab5c3}
+#stick{position:absolute;left:22px;bottom:22px;width:124px;height:124px;border:2px solid #b3bdc755;border-radius:50%;background:#18233388;pointer-events:auto;touch-action:none}
+#nub{position:absolute;width:48px;height:48px;left:36px;top:36px;border-radius:50%;background:#b9a16a99;border:2px solid #e2c98a}
+.actions{position:absolute;right:18px;bottom:20px;display:flex;gap:10px;align-items:end;pointer-events:auto}
+.act{width:62px;height:62px;border-radius:50%;border:2px solid #b9a16a;background:#182333dd;color:#f2d99b;font:bold 11px monospace;touch-action:none}
+#attack{width:76px;height:76px;background:#553b32ee}
+#message{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;background:#0b111ddd;border:1px solid #9b8051;padding:18px 22px;max-width:80%;pointer-events:auto}
+#message h1{font-size:clamp(20px,4vw,34px);font-weight:normal;margin:0 0 8px;color:#e8c987}
+#message p{font:12px/1.5 monospace;color:#b8c1ca}
+#start{background:#8c6c3e;color:#fff;border:0;padding:10px 24px;font:13px monospace}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+ <div id="brand" class="panel">SOLODEFSTUDIO · LAST PASSENGER</div>
+ <div id="stats" class="panel">HP <span id="hp">100</span> · ПАМЯТЬ <span id="mem">0</span></div>
+ <div id="hint" class="panel">ГОРОД БЕЗ ЛЮДЕЙ · СЕКТОР 01</div>
+ <div id="stick"><div id="nub"></div></div>
+ <div class="actions">
+  <button class="act" id="skill">ИМПУЛЬС</button>
+  <button class="act" id="dash">РЫВОК</button>
+  <button class="act" id="attack">УДАР</button>
+ </div>
+ <div id="message">
+  <h1>Последний пассажир</h1>
+  <p>Поезд «Нулевой» остановился у пустого вокзала.<br>Найди осколки памяти. Не дай Сигналу найти тебя.</p>
+  <button id="start">НАЧАТЬ ПУТЬ</button>
+ </div>
+</div>
+<script>
+(() => {
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+let W=0,H=0,scale=1,started=false,hp=100,memory=0,last=0,spawn=0,attackCd=0,skillCd=0,dashCd=0;
+const world={x:0,y:0,w:1800,h:1200};
+const player={x:900,y:600,vx:0,vy:0,r:13,faceX:1,faceY:0,inv:0};
+let enemies=[],shards=[],particles=[];
+const keys={x:0,y:0};
+function resize(){W=canvas.width=Math.floor(innerWidth*devicePixelRatio);H=canvas.height=Math.floor(innerHeight*devicePixelRatio);scale=devicePixelRatio;ctx.setTransform(scale,0,0,scale,0,0)}
+addEventListener('resize',resize);resize();
+function spawnEnemy(){const a=Math.random()*Math.PI*2,d=360+Math.random()*170;enemies.push({x:player.x+Math.cos(a)*d,y:player.y+Math.sin(a)*d,hp:30,speed:35+Math.random()*18,r:12,hit:0})}
+function burst(x,y,c){for(let i=0;i<8;i++)particles.push({x,y,vx:(Math.random()-.5)*150,vy:(Math.random()-.5)*150,t:.45,c})}
+function moveStick(e){const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=(e.clientX-cx)/48,dy=(e.clientY-cy)/48,l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}keys.x=dx;keys.y=dy;nub.style.transform='translate('+dx*35+'px,'+dy*35+'px)'}
+const stick=document.getElementById('stick'),nub=document.getElementById('nub');
+stick.addEventListener('pointerdown',e=>{stick.setPointerCapture(e.pointerId);moveStick(e)});
+stick.addEventListener('pointermove',e=>{if(e.buttons)moveStick(e)});
+function stopStick(){keys.x=keys.y=0;nub.style.transform=''}
+stick.addEventListener('pointerup',stopStick);stick.addEventListener('pointercancel',stopStick);
+function bind(id,fn){const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();if(started)fn()})}
+bind('attack',()=>{if(attackCd>0)return;attackCd=.35;let target=enemies.filter(e=>Math.hypot(e.x-player.x,e.y-player.y)<95).sort((a,b)=>Math.hypot(a.x-player.x,a.y-player.y)-Math.hypot(b.x-player.x,b.y-player.y))[0];if(target){target.hp-=25;target.hit=.18;burst(target.x,target.y,'#e6b66d');if(target.hp<=0){shards.push({x:target.x,y:target.y,r:7});enemies.splice(enemies.indexOf(target),1)}}});
+bind('skill',()=>{if(skillCd>0)return;skillCd=5;for(const e of enemies){if(Math.hypot(e.x-player.x,e.y-player.y)<155){e.hp-=45;e.hit=.3;burst(e.x,e.y,'#ff8755')}}});
+bind('dash',()=>{if(dashCd>0)return;dashCd=2;player.inv=.35;player.x+=player.faceX*105;player.y+=player.faceY*105;burst(player.x,player.y,'#8d9dd8')});
+document.getElementById('start').onclick=()=>{started=true;document.getElementById('message').classList.add('hidden');for(let i=0;i<5;i++)spawnEnemy()};
+window.gamePause=()=>{};
+function draw(){ctx.clearRect(0,0,W,H);const vw=W/scale,vh=H/scale,cx=player.x-vw/2,cy=player.y-vh/2;
+ctx.fillStyle='#111923';ctx.fillRect(0,0,vw,vh);
+const tile=64;for(let y=Math.floor(cy/tile)*tile;y<cy+vh+tile;y+=tile)for(let x=Math.floor(cx/tile)*tile;x<cx+vw+tile;x+=tile){let sx=x-cx,sy=y-cy;ctx.fillStyle=((x/tile+y/tile)%2===0)?'#17212a':'#151e27';ctx.fillRect(sx,sy,tile-1,tile-1);if(Math.sin(x*13+y*7)>.96){ctx.fillStyle='#39434a';ctx.fillRect(sx+20,sy+20,3,3)}}
+ctx.strokeStyle='#35434a';ctx.lineWidth=4;ctx.strokeRect(-cx,-cy,world.w,world.h);
+for(const s of shards){ctx.fillStyle='#7dd6d0';ctx.beginPath();ctx.moveTo(s.x-cx,s.y-cy-9);ctx.lineTo(s.x-cx+7,s.y-cy);ctx.lineTo(s.x-cx,s.y-cy+9);ctx.lineTo(s.x-cx-7,s.y-cy);ctx.fill()}
+for(const e of enemies){ctx.fillStyle=e.hit>0?'#fff1c9':'#8d554d';ctx.beginPath();ctx.arc(e.x-cx,e.y-cy,e.r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e9b17d';ctx.fillRect(e.x-cx-4,e.y-cy-3,3,3);ctx.fillRect(e.x-cx+3,e.y-cy-3,3,3)}
+ctx.fillStyle=player.inv>0?'#b5c8ff':'#d4c49b';ctx.fillRect(player.x-cx-8,player.y-cy-12,16,24);ctx.fillStyle='#303d50';ctx.fillRect(player.x-cx-6,player.y-cy-5,12,13);ctx.fillStyle='#e6c27b';ctx.fillRect(player.x-cx+player.faceX*8-2,player.y-cy+player.faceY*8-2,4,4);
+for(const p of particles){ctx.globalAlpha=Math.max(0,p.t*2);ctx.fillStyle=p.c;ctx.fillRect(p.x-cx,p.y-cy,3,3)}ctx.globalAlpha=1;
+}
+function update(dt){if(!started)return;attackCd=Math.max(0,attackCd-dt);skillCd=Math.max(0,skillCd-dt);dashCd=Math.max(0,dashCd-dt);player.inv=Math.max(0,player.inv-dt);
+let l=Math.hypot(keys.x,keys.y);if(l>.08){player.faceX=keys.x/l;player.faceY=keys.y/l}player.vx=keys.x*190;player.vy=keys.y*190;player.x=Math.max(20,Math.min(world.w-20,player.x+player.vx*dt));player.y=Math.max(20,Math.min(world.h-20,player.y+player.vy*dt));
+for(const e of enemies){let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*e.speed*dt;e.y+=dy/d*e.speed*dt;e.hit=Math.max(0,e.hit-dt);if(d<25&&player.inv<=0){hp=Math.max(0,hp-12*dt);document.getElementById('hp').textContent=Math.ceil(hp)}}
+for(let i=shards.length-1;i>=0;i--){if(Math.hypot(shards[i].x-player.x,shards[i].y-player.y)<30){shards.splice(i,1);memory++;document.getElementById('mem').textContent=memory}}
+for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt;if(p.t<=0)particles.splice(i,1)}
+spawn+=dt;if(spawn>4&&enemies.length<10){spawn=0;spawnEnemy()}
+if(hp<=0){started=false;document.getElementById('message').classList.remove('hidden');document.querySelector('#message h1').textContent='СИГНАЛ ПОГЛОТИЛ ТЕБЯ';document.querySelector('#message p').textContent='Собрано осколков памяти: '+memory;document.getElementById('start').textContent='ПОПРОБОВАТЬ СНОВА';document.getElementById('start').onclick=()=>{hp=100;memory=0;enemies=[];shards=[];player.x=900;player.y=600;document.getElementById('hp').textContent=100;document.getElementById('mem').textContent=0;started=true;document.getElementById('message').classList.add('hidden');for(let i=0;i<5;i++)spawnEnemy()}}}
+function loop(t){let dt=Math.min(.04,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+})();
+</script>
+</body></html>
