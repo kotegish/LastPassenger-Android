@@ -104,7 +104,7 @@
   }
   function draw() {
     const vh = height / scale;
-    const top = WORLD.height - vh;
+    const top = WORLD.floorY - vh * 0.72;
     ctx.fillStyle = "#111725";
     ctx.fillRect(0, 0, width, height);
 
