@@ -7,8 +7,8 @@
   image.src = "assets/train_panorama.png";
   image.onerror = () => console.error("Не удалось загрузить assets/train_panorama.png");
 
-  const WORLD = { width: 1536, height: 512, floorY: 354 };
-  const player = { x: 130, y: WORLD.floorY - 20, w: 9, h: 20, vx: 0, vy: 0, speed: 230, jump: 520, grounded: true };
+  const WORLD = { width: 1536, height: 512, floorY: 235 };
+  const player = { x: 130, y: WORLD.floorY - 50, w: 22.5, h: 50, vx: 0, vy: 0, speed: 230, jump: 520, grounded: true };
   const input = { left: false, right: false, jump: false, jumpQueued: false };
   const camera = { x: 0 };
   let width = 0, height = 0, scale = 1, lastTime = 0;
@@ -93,11 +93,11 @@
     ctx.translate(-camera.x, -top);
     drawTrain();
 
-    // Small temporary player placeholder. Collision body is 9 x 20 world units.
+    // Temporary player placeholder. Collision body is 22.5 x 50 world units (2.5x).
     ctx.fillStyle = "#e5c17b";
     ctx.fillRect(Math.round(player.x - player.w / 2), Math.round(player.y), player.w, player.h);
     ctx.fillStyle = "#252a35";
-    ctx.fillRect(player.x - 3, player.y + 4, 6, 5);
+    ctx.fillRect(player.x - 7, player.y + 10, 14, 12);
     ctx.restore();
   }
 
