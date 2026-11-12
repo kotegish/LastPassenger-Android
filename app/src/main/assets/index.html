@@ -14,7 +14,46 @@
 #stick{position:absolute;left:20px;bottom:18px;width:122px;height:122px;border:2px solid #b3bdc766;border-radius:50%;background:#18233399;pointer-events:auto;touch-action:none}#nub{position:absolute;width:46px;height:46px;left:36px;top:36px;border-radius:50%;background:#b9a16a99;border:2px solid #e2c98a}
 .actions{position:absolute;right:15px;bottom:17px;display:flex;gap:9px;align-items:end;pointer-events:auto}.act{position:relative;overflow:hidden;width:60px;height:60px;border-radius:50%;border:2px solid #b9a16a;background:#182333ed;color:#f2d99b;font:bold 10px monospace;touch-action:none}.act span{position:relative;z-index:2}.cooldown{position:absolute;z-index:1;left:0;right:0;bottom:0;height:100%;background:#050912b8;transform:scaleY(0);transform-origin:bottom;pointer-events:none}#skill{width:68px;height:68px}#dash{width:58px;height:58px}
 #message{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;background:#0b111df2;border:1px solid #9b8051;padding:18px 22px;width:min(420px,86vw);pointer-events:auto}#message h1{font-size:clamp(20px,4vw,34px);font-weight:normal;margin:0 0 8px;color:#e8c987}#archivePanel{position:fixed;z-index:100002;left:50%;top:50%;transform:translate(-50%,-50%);width:min(430px,92vw);max-height:82vh;overflow:auto;padding:18px;background:#101a27f7;border:2px solid #78aaa1;border-radius:12px;box-shadow:0 8px 40px #000e;pointer-events:auto}#archivePanel h2{margin:0 0 5px;color:#a8e0d5;font-weight:normal}#archivePanel p{font:11px/1.5 monospace;color:#b9c5d0}#archiveBalance{color:#e8c987!important;font-size:13px!important}#archivePanel .upgradeChoice:disabled{opacity:.42;filter:grayscale(1)}#archiveClose{margin-top:10px;background:#36535a;color:white;border:0;padding:10px 18px;font:11px monospace}#message p{font:12px/1.6 monospace;color:#b8c1ca}#start{background:#8c6c3e;color:#fff;border:0;padding:11px 25px;font:13px monospace}.hidden{display:none}
-#echoBtn{position:fixed;z-index:99994;left:50%;bottom:76px;transform:translateX(-50%);min-width:112px;min-height:38px;background:#302b4bed;color:#d9d4ff;border:1px solid #9a91d0;border-radius:8px;font:10px monospace;pointer-events:auto;touch-action:manipulation;display:none}#interact{position:fixed;z-index:99995;left:50%;bottom:24px;transform:translateX(-50%);min-width:112px;min-height:42px;background:#263d49ed;color:#d9e8dc;border:1px solid #9bb9a9;border-radius:8px;font:10px monospace;pointer-events:auto;touch-action:manipulation;display:none}#hubPanel,#dialogPanel,#dungeonPanel{position:fixed;z-index:100003;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,92vw);max-height:84vh;overflow:auto;padding:18px;background:#0c1722f7;border:2px solid #c4a36a;border-radius:12px;box-shadow:0 8px 40px #000e;pointer-events:auto}#hubPanel h2,#dialogPanel h2,#dungeonPanel h2{margin:0 0 8px;color:#e8c987;font-weight:normal}#hubPanel p,#dialogPanel p,#dungeonPanel p{font:11px/1.55 monospace;color:#c1cbd1}#hubPanel button,#dialogPanel button,#dungeonPanel button{display:block;width:100%;margin:7px 0;padding:11px;background:linear-gradient(135deg,#314654,#172431);border:1px solid #a88b5c;border-radius:7px;color:#f1e4c6;text-align:left;font:11px monospace;touch-action:manipulation}#hubPanel .muted{opacity:.55}#hubPanel .small{font-size:9px;color:#9fb1b8}#trainStatus{color:#9edbd3!important}</style></head><body>
+#echoBtn{position:fixed;z-index:99994;left:50%;bottom:76px;transform:translateX(-50%);min-width:112px;min-height:38px;background:#302b4bed;color:#d9d4ff;border:1px solid #9a91d0;border-radius:8px;font:10px monospace;pointer-events:auto;touch-action:manipulation;display:none}#interact{position:fixed;z-index:99995;left:50%;bottom:24px;transform:translateX(-50%);min-width:112px;min-height:42px;background:#263d49ed;color:#d9e8dc;border:1px solid #9bb9a9;border-radius:8px;font:10px monospace;pointer-events:auto;touch-action:manipulation;display:none}#hubPanel,#dialogPanel,#dungeonPanel{position:fixed;z-index:100003;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,92vw);max-height:84vh;overflow:auto;padding:18px;background:#0c1722f7;border:2px solid #c4a36a;border-radius:12px;box-shadow:0 8px 40px #000e;pointer-events:auto}#hubPanel h2,#dialogPanel h2,#dungeonPanel h2{margin:0 0 8px;color:#e8c987;font-weight:normal}#hubPanel p,#dialogPanel p,#dungeonPanel p{font:11px/1.55 monospace;color:#c1cbd1}#hubPanel button,#dialogPanel button,#dungeonPanel button{display:block;width:100%;margin:7px 0;padding:11px;background:linear-gradient(135deg,#314654,#172431);border:1px solid #a88b5c;border-radius:7px;color:#f1e4c6;text-align:left;font:11px monospace;touch-action:manipulation}#hubPanel .muted{opacity:.55}#hubPanel .small{font-size:9px;color:#9fb1b8}#trainStatus{color:#9edbd3!important}
+/* HUD cleanup: compact controls and quieter information hierarchy */
+#brand{display:none}
+#stats{top:10px;left:10px;min-width:0;width:auto;max-width:calc(100vw - 190px);padding:7px 9px;font-size:10px;line-height:1.5;background:#101923d9;border-color:#46515c;box-shadow:0 2px 10px #0007}
+#stats br{display:none}
+#stats #best{display:none}
+#xpTrack{height:4px;margin-top:4px}
+#xpText{font-size:8px;margin-top:2px}
+#hint{top:73px;left:10px;max-width:calc(100vw - 20px);padding:4px 7px;font-size:8px;background:#101923b8;border-color:#39444f;opacity:.9}
+#bag,#pauseBtn,#archiveOpen{right:10px;width:42px;min-width:42px;height:42px;min-height:42px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 9px #0008}
+#bag{top:10px;border:1px solid #b99a62;background:#182534e8}
+#bag .bagicon{font-size:18px}
+#bag span:not(.bagicon){display:none}
+#pauseBtn{top:60px;font-size:0;background:#182333e8;border-color:#667786;color:#f2d99b}
+#pauseBtn:after{content:'Ⅱ';font: bold 17px monospace}
+#archiveOpen{top:110px;font-size:0;background:#1d3440e8;border-color:#628e87}
+#archiveOpen:after{content:'✧';font:20px Georgia,serif;color:#b9e4dc}
+#stick{left:14px;bottom:14px;width:106px;height:106px;border-color:#aab5bf55;background:#111b28aa}
+#nub{left:29px;top:29px;width:44px;height:44px}
+.actions{right:13px;bottom:14px;gap:7px}
+.act{width:52px;height:52px;font-size:9px;background:#182333e8}
+#skill{width:60px;height:60px}
+#dash{width:50px;height:50px}
+#echoBtn,#interact{min-width:96px;min-height:34px;padding:6px 9px;font-size:9px;border-radius:18px;left:50%}
+#echoBtn{bottom:61px}
+#interact{bottom:18px}
+#bossbar{top:10px;width:min(230px,42vw);left:50%}
+@media (max-width:520px){
+ #stats{max-width:calc(100vw - 145px);font-size:9px}
+ #hint{top:68px}
+ #bag,#pauseBtn,#archiveOpen{width:38px;min-width:38px;height:38px;min-height:38px}
+ #pauseBtn{top:55px}
+ #archiveOpen{top:100px}
+ #stick{width:96px;height:96px}
+ #nub{left:25px;top:25px}
+ .actions{gap:5px}
+ #skill{width:54px;height:54px}
+ #dash{width:46px;height:46px}
+}
+</style></head><body>
 <canvas id="game"></canvas><div id="hud">
 <div id="brand" class="panel">SOLODEFSTUDIO · LAST PASSENGER</div><div id="stats" class="panel">ЗДОРОВЬЕ <span id="hp">100</span> · ПАМЯТЬ <span id="mem">0</span> · ВОЛНА <span id="wave">1</span> · УР. <span id="level">1</span><br>РЕКОРД <span id="best">1 / 0</span><div id="xpTrack"><div id="xpFill"></div></div><span id="xpText">ОПЫТ 0 / 5 ДО СЛЕДУЮЩЕГО УРОВНЯ</span></div><div id="hint" class="panel">ГОРОД БЕЗ ЛЮДЕЙ · 01</div><button id="pauseBtn" type="button">Ⅱ ПАУЗА</button><button id="bag" type="button" aria-label="Открыть инвентарь"><span class="bagicon">🎒</span><span>ИНВЕНТАРЬ</span></button><button id="archiveOpen" type="button">АРХИВ ПАМЯТИ</button><div id="levelPanel" class="hidden"><h2>НОВЫЙ УРОВЕНЬ</h2><p>Выберите одно улучшение. Решение изменит ваш стиль боя.</p><div id="upgradeChoices"></div></div><div id="pausePanel" class="hidden"><h2>ПАУЗА</h2><p>Путь временно остановлен. Нажмите, чтобы вернуться в бой.</p><button id="resume">ПРОДОЛЖИТЬ</button></div><div id="inventory" class="hidden"><h2>Снаряжение пассажира 0001</h2><div id="gearlist"></div><button id="closebag">ЗАКРЫТЬ</button></div>
 <div id="bossbar" class="panel">СТАНЦИОННЫЙ СМОТРИТЕЛЬ<div style="height:5px;background:#382b30;margin-top:5px"><div id="bossfill"></div></div></div>
