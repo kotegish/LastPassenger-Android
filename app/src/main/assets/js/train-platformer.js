@@ -7,7 +7,7 @@
   image.src = "assets/train_panorama.png";
   image.onerror = () => console.error("Не удалось загрузить assets/train_panorama.png");
 
-  const WORLD = { width: 1536, height: 512, floorY: 235 };
+  const WORLD = { width: 1536, height: 512, floorY: 288 };
   const player = { x: 130, y: WORLD.floorY - 50, w: 22.5, h: 50, vx: 0, vy: 0, speed: 230, jump: 520, grounded: true };
   const input = { left: false, right: false, jump: false, jumpQueued: false };
   const camera = { x: 0 };
