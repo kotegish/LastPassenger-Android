@@ -79,12 +79,12 @@
   function drawBackground() {
     const vw = width / scale;
     const vh = height / scale;
-    const top = WORLD.height - vh;
+    const top = WORLD.floorY - vh * 0.72;
 
     if (image.complete && image.naturalWidth) {
       // Independent horizontal offsets create depth while retaining the original panorama.
       const drawStrip = (sy, sh, factor) => {
-        const offset = -camera.x * factor;
+        const offset = camera.x * (1 - factor);
         const x = ((offset % WORLD.width) + WORLD.width) % WORLD.width - WORLD.width;
         ctx.drawImage(image, 0, sy, WORLD.width, sh, x, sy, WORLD.width, sh);
         ctx.drawImage(image, 0, sy, WORLD.width, sh, x + WORLD.width, sy, WORLD.width, sh);
