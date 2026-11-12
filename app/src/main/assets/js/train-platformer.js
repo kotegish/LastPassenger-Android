@@ -1,0 +1,153 @@
+(() => {
+  "use strict";
+
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d", { alpha: false });
+  const image = new Image();
+  image.src = "assets/train_panorama.png";
+
+  const WORLD = { width: 1536, height: 512, floorY: 365 };
+  const player = { x: 130, y: WORLD.floorY - 42, w: 24, h: 42, vx: 0, vy: 0, speed: 230, jump: 520, grounded: true };
+  const input = { left: false, right: false, jump: false, jumpQueued: false };
+  const camera = { x: 0 };
+  let width = 0, height = 0, scale = 1, lastTime = 0;
+  const keys = new Set();
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = Math.max(1, window.innerWidth);
+    height = Math.max(1, window.innerHeight);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Keep the camera close to one wagon in width; the visible area is about 1.25 wagons.
+    scale = width / 330;
+  }
+
+  function bindButton(id, down, up) {
+    const el = document.getElementById(id);
+    el.addEventListener("pointerdown", e => { e.preventDefault(); el.setPointerCapture(e.pointerId); down(); });
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(type =>
+      el.addEventListener(type, e => { e.preventDefault(); up(); })
+    );
+  }
+
+  bindButton("left", () => input.left = true, () => input.left = false);
+  bindButton("right", () => input.right = true, () => input.right = false);
+  bindButton("jump", () => { input.jump = true; input.jumpQueued = true; }, () => input.jump = false);
+
+  window.addEventListener("keydown", e => {
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyA", "KeyD", "KeyW"].includes(e.code)) e.preventDefault();
+    keys.add(e.code);
+    if (["Space", "ArrowUp", "KeyW"].includes(e.code) && !e.repeat) input.jumpQueued = true;
+  });
+  window.addEventListener("keyup", e => keys.delete(e.code));
+  window.addEventListener("blur", () => { keys.clear(); input.left = input.right = input.jump = false; });
+
+  function update(dt) {
+    const left = input.left || keys.has("ArrowLeft") || keys.has("KeyA");
+    const right = input.right || keys.has("ArrowRight") || keys.has("KeyD");
+    const axis = (right ? 1 : 0) - (left ? 1 : 0);
+
+    player.vx = axis * player.speed;
+    player.x += player.vx * dt;
+    player.x = Math.max(player.w / 2, Math.min(WORLD.width - player.w / 2, player.x));
+
+    if (input.jumpQueued && player.grounded) {
+      player.vy = -player.jump;
+      player.grounded = false;
+    }
+    input.jumpQueued = false;
+
+    player.vy += 1450 * dt;
+    player.y += player.vy * dt;
+    const floorTop = WORLD.floorY - player.h;
+    if (player.y >= floorTop) {
+      player.y = floorTop;
+      player.vy = 0;
+      player.grounded = true;
+    }
+
+    const viewportWorldWidth = width / scale;
+    const target = player.x - viewportWorldWidth * 0.43;
+    camera.x += (target - camera.x) * Math.min(1, dt * 7);
+    camera.x = Math.max(0, Math.min(WORLD.width - viewportWorldWidth, camera.x));
+  }
+
+  function drawBackground() {
+    const vw = width / scale;
+    const vh = height / scale;
+    const top = WORLD.height - vh;
+    ctx.save();
+    ctx.scale(scale, scale);
+
+    if (image.complete && image.naturalWidth) {
+      // Far sky/city layer: slow parallax.
+      const skyShift = camera.x * 0.18;
+      ctx.drawImage(image, 0, 0, WORLD.width, 365, -skyShift, top, WORLD.width, 365);
+      ctx.drawImage(image, 0, 0, WORLD.width, 365, WORLD.width - skyShift, top, WORLD.width, 365);
+
+      // Train body is the gameplay plane. Its motion is tied to the camera.
+      const trainShift = camera.x * 0.82;
+      ctx.drawImage(image, 0, 105, WORLD.width, 265, -trainShift, top + 105, WORLD.width, 265);
+      ctx.drawImage(image, 0, 105, WORLD.width, 265, WORLD.width - trainShift, top + 105, WORLD.width, 265);
+
+      // Near viaduct layer moves slightly faster, adding depth.
+      const bridgeShift = camera.x * 1.08;
+      ctx.drawImage(image, 0, 365, WORLD.width, 147, -bridgeShift, top + 365, WORLD.width, 147);
+      ctx.drawImage(image, 0, 365, WORLD.width, 147, WORLD.width - bridgeShift, top + 365, WORLD.width, 147);
+    } else {
+      ctx.fillStyle = "#151b2a";
+      ctx.fillRect(0, 0, vw, vh);
+      ctx.fillStyle = "#34394a";
+      ctx.fillRect(0, WORLD.floorY - top, vw, 6);
+      ctx.fillStyle = "#e2c27e";
+      ctx.font = "10px monospace";
+      ctx.fillText("ОЖИДАНИЕ ФОНА: assets/train_panorama.png", 12, 24);
+    }
+
+    // Walkable floor aligned with the horizontal red guide from the supplied reference.
+    const floorY = WORLD.floorY - top;
+    ctx.fillStyle = "#171a20";
+    ctx.fillRect(0, floorY, vw, 18);
+    ctx.fillStyle = "#8a7655";
+    ctx.fillRect(0, floorY, vw, 3);
+    ctx.fillStyle = "#343a42";
+    ctx.fillRect(0, floorY + 3, vw, 4);
+    ctx.restore();
+  }
+
+  function draw() {
+    const vh = height / scale;
+    const top = WORLD.height - vh;
+    ctx.fillStyle = "#111725";
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.save();
+    ctx.scale(scale, scale);
+    ctx.translate(-camera.x, -top);
+    drawBackground();
+
+    // Temporary player placeholder. Collision body is 24 x 42 world units.
+    ctx.fillStyle = "#e5c17b";
+    ctx.fillRect(Math.round(player.x - player.w / 2), Math.round(player.y), player.w, player.h);
+    ctx.fillStyle = "#252a35";
+    ctx.fillRect(player.x - 7, player.y + 7, 14, 9);
+    ctx.restore();
+  }
+
+  function frame(now) {
+    const dt = Math.min(0.033, (now - lastTime) / 1000 || 0);
+    lastTime = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  window.gamePause = () => { input.left = input.right = input.jump = false; };
+  window.addEventListener("resize", resize);
+  resize();
+  requestAnimationFrame(frame);
+})();
