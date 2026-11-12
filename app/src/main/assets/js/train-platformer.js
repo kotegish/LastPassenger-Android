@@ -80,45 +80,28 @@
     const vw = width / scale;
     const vh = height / scale;
     const top = WORLD.height - vh;
-    ctx.save();
-    ctx.scale(scale, scale);
 
     if (image.complete && image.naturalWidth) {
-      // Far sky/city layer: slow parallax.
-      const skyShift = camera.x * 0.18;
-      ctx.drawImage(image, 0, 0, WORLD.width, 365, -skyShift, top, WORLD.width, 365);
-      ctx.drawImage(image, 0, 0, WORLD.width, 365, WORLD.width - skyShift, top, WORLD.width, 365);
-
-      // Train body is the gameplay plane. Its motion is tied to the camera.
-      const trainShift = camera.x * 0.82;
-      ctx.drawImage(image, 0, 105, WORLD.width, 265, -trainShift, top + 105, WORLD.width, 265);
-      ctx.drawImage(image, 0, 105, WORLD.width, 265, WORLD.width - trainShift, top + 105, WORLD.width, 265);
-
-      // Near viaduct layer moves slightly faster, adding depth.
-      const bridgeShift = camera.x * 1.08;
-      ctx.drawImage(image, 0, 365, WORLD.width, 147, -bridgeShift, top + 365, WORLD.width, 147);
-      ctx.drawImage(image, 0, 365, WORLD.width, 147, WORLD.width - bridgeShift, top + 365, WORLD.width, 147);
+      // Independent horizontal offsets create depth while retaining the original panorama.
+      const drawStrip = (sy, sh, factor) => {
+        const offset = -camera.x * factor;
+        const x = ((offset % WORLD.width) + WORLD.width) % WORLD.width - WORLD.width;
+        ctx.drawImage(image, 0, sy, WORLD.width, sh, x, sy, WORLD.width, sh);
+        ctx.drawImage(image, 0, sy, WORLD.width, sh, x + WORLD.width, sy, WORLD.width, sh);
+      };
+      drawStrip(0, 160, 0.18);       // distant sky and city
+      drawStrip(105, 265, 1.0);      // train and walkable wagon roofs/platform
+      drawStrip(365, 147, 1.08);    // foreground viaduct
     } else {
       ctx.fillStyle = "#151b2a";
-      ctx.fillRect(0, 0, vw, vh);
+      ctx.fillRect(camera.x, top, vw, vh);
       ctx.fillStyle = "#34394a";
-      ctx.fillRect(0, WORLD.floorY - top, vw, 6);
+      ctx.fillRect(camera.x, WORLD.floorY, vw, 6);
       ctx.fillStyle = "#e2c27e";
       ctx.font = "10px monospace";
-      ctx.fillText("ОЖИДАНИЕ ФОНА: assets/train_panorama.png", 12, 24);
+      ctx.fillText("ФОН НЕ НАЙДЕН: assets/train_panorama.png", camera.x + 12, top + 24);
     }
-
-    // Walkable floor aligned with the horizontal red guide from the supplied reference.
-    const floorY = WORLD.floorY - top;
-    ctx.fillStyle = "#171a20";
-    ctx.fillRect(0, floorY, vw, 18);
-    ctx.fillStyle = "#8a7655";
-    ctx.fillRect(0, floorY, vw, 3);
-    ctx.fillStyle = "#343a42";
-    ctx.fillRect(0, floorY + 3, vw, 4);
-    ctx.restore();
   }
-
   function draw() {
     const vh = height / scale;
     const top = WORLD.height - vh;
