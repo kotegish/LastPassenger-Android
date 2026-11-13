@@ -10,18 +10,19 @@
   heroImage.src = "assets/hero.png";
   heroImage.onerror = () => console.error("Не удалось загрузить assets/hero.png");
 
-  const WORLD = { width: 1536, height: 512, floorY: 288 };
+  const WORLD = { width: 1536, height: 512 };
   const WAGONS = [
-    { id: "engine", left: 0, right: 335, name: "МАШИННОЕ ОТДЕЛЕНИЕ" },
-    { id: "forge", left: 335, right: 570, name: "КУЗНИЦА" },
-    { id: "greenhouse", left: 570, right: 810, name: "ОРАНЖЕРЕЯ" },
-    { id: "archive", left: 810, right: 1045, name: "АРХИВ" },
-    { id: "lounge", left: 1045, right: 1280, name: "ЖИЛОЙ ВАГОН" },
-    { id: "observatory", left: 1280, right: 1536, name: "ОБСЕРВАТОРИЯ" }
+    { id: "engine", left: 0, right: 335, floorY: 288, name: "МАШИННОЕ ОТДЕЛЕНИЕ" },
+    { id: "forge", left: 335, right: 570, floorY: 300, name: "КУЗНИЦА" },
+    { id: "greenhouse", left: 570, right: 810, floorY: 300, name: "ОРАНЖЕРЕЯ" },
+    { id: "archive", left: 810, right: 1045, floorY: 300, name: "АРХИВ" },
+    { id: "lounge", left: 1045, right: 1280, floorY: 300, name: "ЖИЛОЙ ВАГОН" },
+    { id: "observatory", left: 1280, right: 1536, floorY: 300, name: "ОБСЕРВАТОРИЯ" }
   ];
+  const currentFloorY = () => WAGONS[activeWagon].floorY;
   const DOOR_RADIUS = 43;
   const EDGE_MARGIN = 24;
-  const player = { x: 130, y: WORLD.floorY - 50, w: 22.5, h: 50, renderH: 76, vx: 0, vy: 0, speed: 230, jump: 520, grounded: true, facing: 1 };
+  const player = { x: 130, y: WAGONS[0].floorY - 50, w: 22.5, h: 50, renderH: 76, vx: 0, vy: 0, speed: 230, jump: 520, grounded: true, facing: 1 };
   const input = { left: false, right: false, jump: false, jumpQueued: false };
   const camera = { x: 0 };
   const transition = { active: false, phase: "none", timer: 0, duration: 0.38, targetX: 0, targetWagon: 0 };
@@ -99,7 +100,7 @@
     transition.timer += dt;
     if (transition.phase === "out" && transition.timer >= transition.duration) {
       player.x = transition.targetX;
-      player.y = WORLD.floorY - player.h;
+      player.y = WAGONS[transition.targetWagon].floorY - player.h;
       player.vx = player.vy = 0;
       player.grounded = true;
       activeWagon = transition.targetWagon;
@@ -140,7 +141,7 @@
 
     player.vy += 1450 * dt;
     player.y += player.vy * dt;
-    const floorTop = WORLD.floorY - player.h;
+    const floorTop = currentFloorY() - player.h;
     if (player.y >= floorTop) {
       player.y = floorTop;
       player.vy = 0;
@@ -187,7 +188,7 @@
   function drawPlayer() {
     if (heroImage.complete && heroImage.naturalWidth > 0) {
       const renderW = player.renderH * heroImage.naturalWidth / heroImage.naturalHeight;
-      const feetY = WORLD.floorY;
+      const feetY = currentFloorY();
       ctx.save();
       ctx.translate(player.x, feetY);
       ctx.scale(player.facing, 1);
@@ -204,7 +205,7 @@
 
   function draw() {
     const vh = height / scale;
-    const top = WORLD.floorY - vh * 0.72;
+    const top = currentFloorY() - vh * 0.72;
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.scale(scale, scale);
