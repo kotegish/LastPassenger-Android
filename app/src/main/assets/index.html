@@ -26,11 +26,23 @@
 #region-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}
 .region-option{min-height:86px;text-align:left;padding:12px;border:1px solid #657184;background:#151e2b;color:#e8ddc2;border-radius:8px;font:12px monospace}
 .region-option strong{display:block;margin-bottom:7px;color:#d7bd85;font-size:12px}.region-option small{color:#9ca8b7;font-size:10px;line-height:1.4}
-.region-option.selected{border-color:#e2c27d;background:#40351f;box-shadow:inset 0 0 0 1px #e2c27d66}
+.region-option.selected{border-color:#e2c27d;background:#40351f;box-shadow:inset 0 0 0 1px #e2c27d66}.region-option:disabled{opacity:.38;filter:grayscale(1)}
 #region-status{min-height:18px;color:#c4b17f;font-size:10px;letter-spacing:1px;margin:12px 0}
 #region-confirm{width:100%;height:46px;border:1px solid #d6bd83;border-radius:8px;background:#80683b;color:#fff2d0;font:bold 12px monospace;letter-spacing:1px}
 #region-confirm:disabled{opacity:.4}
 @media(max-width:420px){.terminal-panel{padding:16px}#region-list{gap:8px}.region-option{min-height:82px;padding:9px}}
+
+#zone-loading{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:#070a10;color:#e8ddc2;font:12px monospace;letter-spacing:2px;opacity:1;transition:opacity .65s ease;pointer-events:auto}
+#zone-loading[hidden]{display:none}#zone-loading.fade{opacity:0}
+#zone-loading span{display:block;margin-top:12px;color:#bca575;font-size:10px;letter-spacing:1px;text-align:center}
+#explore-hud{position:fixed;inset:0;z-index:12;pointer-events:none}#explore-hud[hidden]{display:none}
+#zone-name{position:absolute;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);padding:9px 14px;max-width:75vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#0b101bd9;border:1px solid #b99d6877;color:#e8ddc2;font:11px monospace;letter-spacing:1px}
+#return-train{position:absolute;top:max(14px,env(safe-area-inset-top));left:12px;padding:10px 12px;border:1px solid #b99d6888;border-radius:8px;background:#111a2add;color:#f0dfb3;font:10px monospace;pointer-events:auto}
+#joystick{position:absolute;left:max(22px,env(safe-area-inset-left));bottom:max(24px,env(safe-area-inset-bottom));width:142px;height:142px;border:2px solid #d6c18b88;border-radius:50%;background:radial-gradient(circle,#59627355,#111a2acc 70%);pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 4px 18px #0009}
+#joystick:before{content:"";position:absolute;inset:29px;border:1px solid #d6c18b44;border-radius:50%}
+#joystick-knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border:2px solid #f0dfb3;border-radius:50%;background:linear-gradient(145deg,#a88c5a,#55452d);box-shadow:0 3px 12px #000b;transform:translate(0,0);pointer-events:none}
+#joystick-hint{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);font:8px monospace;color:#e4d5b188;white-space:nowrap;pointer-events:none}
+@media(max-width:420px){#joystick{width:126px;height:126px}#joystick-knob{width:52px;height:52px;margin:-26px 0 0 -26px}}
 @media(min-width:900px){.control{opacity:.55}.control:hover{opacity:1}}
 </style>
 </head>
@@ -47,15 +59,22 @@
   <div class="terminal-top"><div><div class="terminal-kicker">ПОЕЗД «НУЛЕВОЙ» · ВНЕШНИЕ МАРШРУТЫ</div><h1 class="terminal-title" id="terminal-title">КАРТА ГОРОДА</h1></div><button id="terminal-close" aria-label="Закрыть">×</button></div>
   <p class="terminal-subtitle">ТЕРМИНАЛ ВЫСАДКИ. ГОРОДСКАЯ СЕТЬ НЕ ОБНАРУЖИВАЕТ ПРИЗНАКОВ ЖИЗНИ. ВЫБЕРИТЕ РАЙОН.</p>
   <div id="region-list">
-   <button class="region-option" data-region="ЦЕНТР ГОРОДА" aria-pressed="false"><strong>01 · ЦЕНТР ГОРОДА</strong><small>Административные здания и главные улицы</small></button>
-   <button class="region-option" data-region="СТАРЫЙ КВАРТАЛ" aria-pressed="false"><strong>02 · СТАРЫЙ КВАРТАЛ</strong><small>Узкие улицы и заброшенные дворы</small></button>
-   <button class="region-option" data-region="ПРОМЗОНА" aria-pressed="false"><strong>03 · ПРОМЗОНА</strong><small>Фабрики, склады и технические тоннели</small></button>
-   <button class="region-option" data-region="ВОКЗАЛЬНЫЙ РАЙОН" aria-pressed="false"><strong>04 · ВОКЗАЛЬНЫЙ РАЙОН</strong><small>Пути, платформы и транспортные узлы</small></button>
+   <button class="region-option" data-region="Город без людей" aria-pressed="false"><strong>01 · ГОРОД БЕЗ ЛЮДЕЙ</strong><small>Пустые улицы, площадь и заброшенные здания</small></button>
+   <button class="region-option" data-region="Лес, который помнит" aria-pressed="false"><strong>02 · ЛЕС, КОТОРЫЙ ПОМНИТ</strong><small>Древние руины, чаща и болотные тропы</small></button>
+   <button class="region-option" data-region="Мёртвый холод" aria-pressed="false"><strong>03 · МЁРТВЫЙ ХОЛОД</strong><small>Замёрзший город и ледяные улицы</small></button>
+   <button class="region-option" data-region="Сердце под землёй" aria-pressed="false" disabled><strong>04 · СЕРДЦЕ ПОД ЗЕМЛЁЙ</strong><small>Карта ещё не добавлена</small></button>
+   <button class="region-option" data-region="Конечная станция" aria-pressed="false"><strong>05 · КОНЕЧНАЯ СТАНЦИЯ</strong><small>Заброшенный железнодорожный узел</small></button>
   </div>
   <div id="region-status">ВЫБЕРИТЕ РАЙОН ДЛЯ ВЫСАДКИ</div>
   <button id="region-confirm" disabled>ПОДТВЕРДИТЬ МАРШРУТ</button>
  </section>
 </div>
+<div id="zone-loading" hidden><div>ПОДГОТОВКА ЭКСПЕДИЦИИ<span id="zone-loading-name">ЗАГРУЗКА КАРТЫ...</span></div></div>
+<div id="explore-hud" hidden>
+ <button id="return-train">← В ПОЕЗД</button><div id="zone-name"></div>
+ <div id="joystick" aria-label="Джойстик движения"><div id="joystick-knob"></div><div id="joystick-hint">360° · ДВИЖЕНИЕ</div></div>
+</div>
+<script src="js/city-exploration.js"></script>
 <script src="js/train-platformer.js"></script>
 </body>
 </html>
