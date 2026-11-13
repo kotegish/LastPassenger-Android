@@ -80,7 +80,7 @@
     const src=maps[region];
     if(!src)return;
     const token=++state.loadingToken;
-    state.region=region; state.active=true; state.map=null;
+    state.region=region; state.active=true; state.map=null; document.body.classList.add("exploring");
     resetStick(); held.clear(); hud.hidden=true;
     loading.hidden=false; loading.classList.remove("fade");
     loadingName.textContent=region.toUpperCase()+" · ЗАГРУЗКА КАРТЫ";
@@ -109,7 +109,7 @@
   }
   function exit() {
     if(!state.active)return;
-    state.active=false; state.loadingToken++;
+    state.active=false; state.loadingToken++; document.body.classList.remove("exploring");
     resetStick(); held.clear(); hud.hidden=true;
     loading.hidden=true; loading.classList.remove("fade");
     state.map=null;
