@@ -17,6 +17,20 @@
 #interact[hidden]{display:none}
 .control:active{background:#806c48dd;transform:scale(.96)}
 #caption{position:fixed;left:12px;top:12px;padding:7px 10px;background:#101722b8;border:1px solid #a99a7755;color:#e2d5b5;font:10px monospace;letter-spacing:1px;pointer-events:none}
+#terminal-modal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:18px;background:rgba(3,6,12,.82);backdrop-filter:blur(5px);pointer-events:auto}
+#terminal-modal[hidden]{display:none}
+.terminal-panel{width:min(560px,100%);max-height:min(88vh,720px);overflow:auto;padding:22px;border:1px solid #b99d68;background:linear-gradient(145deg,#1b2432f5,#0c111bf5);box-shadow:0 18px 60px #000c;color:#e8ddc2;font-family:monospace}
+.terminal-top{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #a88d5b66;padding-bottom:12px}
+.terminal-kicker{color:#bca575;font-size:10px;letter-spacing:2px}.terminal-title{margin:8px 0 4px;font-size:clamp(19px,5vw,27px);letter-spacing:1px}.terminal-subtitle{color:#9da9b8;font-size:11px;line-height:1.5}
+#terminal-close{border:1px solid #8c7958;background:#121a27;color:#e8ddc2;width:36px;height:36px;border-radius:8px;font-size:20px}
+#region-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}
+.region-option{min-height:86px;text-align:left;padding:12px;border:1px solid #657184;background:#151e2b;color:#e8ddc2;border-radius:8px;font:12px monospace}
+.region-option strong{display:block;margin-bottom:7px;color:#d7bd85;font-size:12px}.region-option small{color:#9ca8b7;font-size:10px;line-height:1.4}
+.region-option.selected{border-color:#e2c27d;background:#40351f;box-shadow:inset 0 0 0 1px #e2c27d66}
+#region-status{min-height:18px;color:#c4b17f;font-size:10px;letter-spacing:1px;margin:12px 0}
+#region-confirm{width:100%;height:46px;border:1px solid #d6bd83;border-radius:8px;background:#80683b;color:#fff2d0;font:bold 12px monospace;letter-spacing:1px}
+#region-confirm:disabled{opacity:.4}
+@media(max-width:420px){.terminal-panel{padding:16px}#region-list{gap:8px}.region-option{min-height:82px;padding:9px}}
 @media(min-width:900px){.control{opacity:.55}.control:hover{opacity:1}}
 </style>
 </head>
@@ -27,6 +41,20 @@
  <div class="pad" id="move"><button class="control" id="left" aria-label="Влево">◀</button><button class="control" id="right" aria-label="Вправо">▶</button></div>
  <div class="pad" id="actions"><button class="control" id="jump">ПРЫЖОК</button></div>
  <button class="control" id="interact" hidden>ПЕРЕЙТИ</button>
+</div>
+<div id="terminal-modal" hidden role="dialog" aria-modal="true" aria-labelledby="terminal-title">
+ <section class="terminal-panel">
+  <div class="terminal-top"><div><div class="terminal-kicker">ПОЕЗД «НУЛЕВОЙ» · ВНЕШНИЕ МАРШРУТЫ</div><h1 class="terminal-title" id="terminal-title">КАРТА ГОРОДА</h1></div><button id="terminal-close" aria-label="Закрыть">×</button></div>
+  <p class="terminal-subtitle">ТЕРМИНАЛ ВЫСАДКИ. ГОРОДСКАЯ СЕТЬ НЕ ОБНАРУЖИВАЕТ ПРИЗНАКОВ ЖИЗНИ. ВЫБЕРИТЕ РАЙОН.</p>
+  <div id="region-list">
+   <button class="region-option" data-region="ЦЕНТР ГОРОДА" aria-pressed="false"><strong>01 · ЦЕНТР ГОРОДА</strong><small>Административные здания и главные улицы</small></button>
+   <button class="region-option" data-region="СТАРЫЙ КВАРТАЛ" aria-pressed="false"><strong>02 · СТАРЫЙ КВАРТАЛ</strong><small>Узкие улицы и заброшенные дворы</small></button>
+   <button class="region-option" data-region="ПРОМЗОНА" aria-pressed="false"><strong>03 · ПРОМЗОНА</strong><small>Фабрики, склады и технические тоннели</small></button>
+   <button class="region-option" data-region="ВОКЗАЛЬНЫЙ РАЙОН" aria-pressed="false"><strong>04 · ВОКЗАЛЬНЫЙ РАЙОН</strong><small>Пути, платформы и транспортные узлы</small></button>
+  </div>
+  <div id="region-status">ВЫБЕРИТЕ РАЙОН ДЛЯ ВЫСАДКИ</div>
+  <button id="region-confirm" disabled>ПОДТВЕРДИТЬ МАРШРУТ</button>
+ </section>
 </div>
 <script src="js/train-platformer.js"></script>
 </body>
