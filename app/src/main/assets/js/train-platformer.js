@@ -13,11 +13,11 @@
   const WORLD = { width: 1536, height: 512 };
   const WAGONS = [
     { id: "engine", left: 0, right: 335, floorY: 288, name: "МАШИННОЕ ОТДЕЛЕНИЕ" },
-    { id: "forge", left: 335, right: 570, floorY: 300, name: "КУЗНИЦА" },
-    { id: "greenhouse", left: 570, right: 810, floorY: 300, name: "ОРАНЖЕРЕЯ" },
-    { id: "archive", left: 810, right: 1045, floorY: 300, name: "АРХИВ" },
-    { id: "lounge", left: 1045, right: 1280, floorY: 300, name: "ЖИЛОЙ ВАГОН" },
-    { id: "observatory", left: 1280, right: 1536, floorY: 300, name: "ОБСЕРВАТОРИЯ" }
+    { id: "forge", left: 335, right: 570, floorY: 315, name: "КУЗНИЦА" },
+    { id: "greenhouse", left: 570, right: 810, floorY: 315, name: "ОРАНЖЕРЕЯ" },
+    { id: "archive", left: 810, right: 1045, floorY: 315, name: "АРХИВ" },
+    { id: "lounge", left: 1045, right: 1280, floorY: 315, name: "ЖИЛОЙ ВАГОН" },
+    { id: "observatory", left: 1280, right: 1536, floorY: 315, name: "ОБСЕРВАТОРИЯ" }
   ];
   const currentFloorY = () => WAGONS[activeWagon].floorY;
   const DOOR_RADIUS = 43;
