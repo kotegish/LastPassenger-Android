@@ -118,7 +118,7 @@
   if (regionList) {
     regionList.addEventListener("click", event => {
       const option = event.target.closest("[data-region]");
-      if (!option) return;
+      if (!option || option.disabled) return;
       selectedRegion = option.dataset.region;
       regionList.querySelectorAll("[data-region]").forEach(item => {
         const active = item === option;
@@ -130,10 +130,9 @@
     });
   }
   if (regionConfirm) regionConfirm.addEventListener("click", () => {
-    if (!selectedRegion) return;
-    caption.textContent = "МАРШРУТ В ГОРОД · " + selectedRegion;
-    regionStatus.textContent = "МАРШРУТ СОХРАНЁН. ГОТОВНОСТЬ К ВЫСАДКЕ.";
+    if (!selectedRegion || !window.cityExploration) return;
     closeTerminal();
+    window.cityExploration.enter(selectedRegion);
   });
   if (terminalClose) terminalClose.addEventListener("click", closeTerminal);
 
@@ -173,6 +172,10 @@
   }
 
   function update(dt) {
+    if (window.cityExploration && window.cityExploration.active) {
+      window.cityExploration.update(dt);
+      return;
+    }
     if (transition.active || (terminalModal && !terminalModal.hidden)) {
       if (transition.active) updateTransition(dt);
       return;
@@ -265,6 +268,10 @@
   }
 
   function draw() {
+    if (window.cityExploration && window.cityExploration.active) {
+      window.cityExploration.draw();
+      return;
+    }
     const vh = height / scale;
     const top = currentFloorY() - vh * 0.72;
     ctx.clearRect(0, 0, width, height);
