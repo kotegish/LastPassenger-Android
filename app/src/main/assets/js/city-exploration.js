@@ -17,6 +17,29 @@
   const joystick = document.getElementById("joystick");
   const knob = document.getElementById("joystick-knob");
   const back = document.getElementById("return-train");
+  const zoneConfig = {
+    "Город без людей": { spawn:[650,28], obstacles:[
+      [0,0,300,235],[350,0,555,205],[880,0,1130,205],[1160,0,1536,250],
+      [0,250,230,490],[270,210,510,410],[690,245,835,430],[1010,345,1320,590],
+      [1360,345,1536,620],[0,690,255,1024],[350,755,650,1024],
+      [870,700,1220,1024],[1260,730,1536,1024],[520,880,780,1024]
+    ]},
+    "Лес, который помнит": { spawn:[92,445], obstacles:[
+      [0,0,1536,115],[0,115,310,290],[350,0,620,260],[650,0,900,210],
+      [920,0,1190,250],[1220,0,1536,270],[0,650,250,1024],
+      [260,790,510,1024],[560,850,810,1024],[900,700,1120,1024],
+      [1190,360,1536,1024],[1080,250,1536,420],
+      [300,300,430,455],[520,250,650,390],[760,300,900,470],
+      [420,520,560,670],[650,620,800,760]
+    ]},
+    "Мёртвый холод": { spawn:[770,28], obstacles:[
+      [0,0,300,330],[330,0,650,245],[930,0,1120,260],[1190,0,1536,235],
+      [0,390,300,690],[0,760,310,1024],[330,760,660,1024],
+      [900,760,1180,1024],[1260,650,1536,1024],
+      [600,350,930,650],[980,340,1200,610],[340,470,510,670]
+    ]},
+    "Конечная станция": { spawn:null, obstacles:[] }
+  };
   const state = {
     active:false, map:null, region:"", x:0, y:0, speed:190,
     cameraX:0, cameraY:0, zoom:1, axisX:0, axisY:0,
@@ -37,7 +60,7 @@
   }
   function updateZoom() {
     const v=viewport(), iw=state.map.naturalWidth, ih=state.map.naturalHeight;
-    state.zoom=Math.min(1.15,Math.max(v.w/iw,v.h/ih));
+    state.zoom=Math.min(2.3,Math.max(v.w/iw,v.h/ih)*2);
     const vw=v.w/state.zoom, vh=v.h/state.zoom;
     state.cameraX=clamp(state.x-vw/2,0,Math.max(0,iw-vw));
     state.cameraY=clamp(state.y-vh/2,0,Math.max(0,ih-vh));
@@ -88,7 +111,9 @@
     map.onload=()=>{
       if(token!==state.loadingToken)return;
       state.map=map;
-      state.x=map.naturalWidth/2; state.y=map.naturalHeight/2;
+      const cfg=zoneConfig[region];
+      if(cfg&&cfg.spawn){ state.x=cfg.spawn[0]; state.y=cfg.spawn[1]; }
+      else { state.x=map.naturalWidth/2; state.y=map.naturalHeight/2; }
       updateZoom(); zoneName.textContent=region.toUpperCase();
       loadingName.textContent="МАРШРУТ ГОТОВ · ВЫСАДКА";
       setTimeout(()=>{
@@ -114,6 +139,14 @@
     loading.hidden=true; loading.classList.remove("fade");
     state.map=null;
   }
+  function collides(x,y) {
+    const cfg=zoneConfig[state.region];
+    if(!cfg)return false;
+    const radius=13;
+    return cfg.obstacles.some(([x1,y1,x2,y2]) =>
+      x+radius>x1 && x-radius<x2 && y+radius>y1 && y-radius<y2
+    );
+  }
   function update(dt) {
     if(!state.active||!state.map)return;
     const key=c=>held.has(c);
@@ -121,8 +154,10 @@
     let ay=state.axisY+(key("ArrowDown")||key("KeyS")?1:0)-(key("ArrowUp")||key("KeyW")?1:0);
     const len=Math.hypot(ax,ay);
     if(len>1){ax/=len;ay/=len;}
-    state.x=clamp(state.x+ax*state.speed*dt,18,state.map.naturalWidth-18);
-    state.y=clamp(state.y+ay*state.speed*dt,18,state.map.naturalHeight-18);
+    const nextX=clamp(state.x+ax*state.speed*dt,18,state.map.naturalWidth-18);
+    const nextY=clamp(state.y+ay*state.speed*dt,18,state.map.naturalHeight-18);
+    if(!collides(nextX,state.y))state.x=nextX;
+    if(!collides(state.x,nextY))state.y=nextY;
     if(Math.abs(ax)>.08)state.facing=ax>0?1:-1;
     const v=viewport(),vw=v.w/state.zoom,vh=v.h/state.zoom;
     const tx=clamp(state.x-vw/2,0,Math.max(0,state.map.naturalWidth-vw));
@@ -136,6 +171,18 @@
     ctx.save(); ctx.scale(state.zoom,state.zoom);
     ctx.translate(-state.cameraX,-state.cameraY);
     ctx.drawImage(state.map,0,0);
+    const cfg=zoneConfig[state.region];
+    if(cfg&&cfg.obstacles.length){
+      ctx.save();
+      ctx.fillStyle="rgba(255,35,65,0.24)";
+      ctx.strokeStyle="rgba(255,70,90,0.95)";
+      ctx.lineWidth=3/state.zoom;
+      cfg.obstacles.forEach(([x1,y1,x2,y2])=>{
+        ctx.fillRect(x1,y1,x2-x1,y2-y1);
+        ctx.strokeRect(x1,y1,x2-x1,y2-y1);
+      });
+      ctx.restore();
+    }
     if(hero.complete&&hero.naturalWidth){
       const h=46,w=h*hero.naturalWidth/hero.naturalHeight;
       ctx.save();ctx.translate(state.x,state.y);ctx.scale(state.facing,1);
