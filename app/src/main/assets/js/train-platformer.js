@@ -29,7 +29,12 @@
   const keys = new Set();
   const interactButton = document.getElementById("interact");
   const caption = document.getElementById("caption");
-  let width = 0, height = 0, scale = 1, lastTime = 0, activeWagon = 0, nearbyDoor = null;
+  const terminalModal = document.getElementById("terminal-modal");
+  const terminalClose = document.getElementById("terminal-close");
+  const regionList = document.getElementById("region-list");
+  const regionConfirm = document.getElementById("region-confirm");
+  const regionStatus = document.getElementById("region-status");
+  let width = 0, height = 0, scale = 1, lastTime = 0, activeWagon = 0, nearbyDoor = null, nearbyTerminal = false, selectedRegion = null;
 
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -54,13 +59,18 @@
   bindButton("left", () => input.left = true, () => input.left = false);
   bindButton("right", () => input.right = true, () => input.right = false);
   bindButton("jump", () => { input.jump = true; input.jumpQueued = true; }, () => input.jump = false);
-  bindButton("interact", () => tryDoorTransition(), () => {});
+  bindButton("interact", () => tryInteraction(), () => {});
 
   window.addEventListener("keydown", e => {
+    if (terminalModal && !terminalModal.hidden) {
+      if (e.code === "Escape") closeTerminal();
+      e.preventDefault();
+      return;
+    }
     if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyA", "KeyD", "KeyW", "KeyE"].includes(e.code)) e.preventDefault();
     keys.add(e.code);
     if (["Space", "ArrowUp", "KeyW"].includes(e.code) && !e.repeat) input.jumpQueued = true;
-    if (e.code === "KeyE" && !e.repeat) tryDoorTransition();
+    if (e.code === "KeyE" && !e.repeat) tryInteraction();
   });
   window.addEventListener("keyup", e => keys.delete(e.code));
   window.addEventListener("blur", () => { keys.clear(); input.left = input.right = input.jump = false; });
@@ -79,6 +89,53 @@
     }
     return best;
   }
+
+  function tryInteraction() {
+    if (terminalModal && !terminalModal.hidden) return;
+    if (nearbyTerminal) { openTerminal(); return; }
+    tryDoorTransition();
+  }
+
+  function openTerminal() {
+    if (!nearbyTerminal || transition.active || !terminalModal) return;
+    input.left = input.right = input.jump = false;
+    input.jumpQueued = false;
+    player.vx = player.vy = 0;
+    terminalModal.hidden = false;
+    interactButton.hidden = true;
+    regionStatus.textContent = "ВЫБЕРИТЕ РАЙОН ДЛЯ ВЫСАДКИ";
+    regionConfirm.disabled = !selectedRegion;
+  }
+
+  function closeTerminal() {
+    if (!terminalModal) return;
+    terminalModal.hidden = true;
+    nearbyTerminal = false;
+    nearbyDoor = null;
+    interactButton.hidden = true;
+  }
+
+  if (regionList) {
+    regionList.addEventListener("click", event => {
+      const option = event.target.closest("[data-region]");
+      if (!option) return;
+      selectedRegion = option.dataset.region;
+      regionList.querySelectorAll("[data-region]").forEach(item => {
+        const active = item === option;
+        item.classList.toggle("selected", active);
+        item.setAttribute("aria-pressed", String(active));
+      });
+      regionConfirm.disabled = false;
+      regionStatus.textContent = "ВЫБРАН МАРШРУТ: " + selectedRegion;
+    });
+  }
+  if (regionConfirm) regionConfirm.addEventListener("click", () => {
+    if (!selectedRegion) return;
+    caption.textContent = "МАРШРУТ В ГОРОД · " + selectedRegion;
+    regionStatus.textContent = "МАРШРУТ СОХРАНЁН. ГОТОВНОСТЬ К ВЫСАДКЕ.";
+    closeTerminal();
+  });
+  if (terminalClose) terminalClose.addEventListener("click", closeTerminal);
 
   function tryDoorTransition() {
     if (!nearbyDoor || transition.active) return;
@@ -116,8 +173,8 @@
   }
 
   function update(dt) {
-    if (transition.active) {
-      updateTransition(dt);
+    if (transition.active || (terminalModal && !terminalModal.hidden)) {
+      if (transition.active) updateTransition(dt);
       return;
     }
 
@@ -148,9 +205,13 @@
       player.grounded = true;
     }
 
-    nearbyDoor = player.grounded ? findNearbyDoor() : null;
-    interactButton.hidden = !nearbyDoor;
-    if (nearbyDoor) {
+    nearbyTerminal = activeWagon === 0 && player.grounded && Math.abs(player.x - 150) <= 52;
+    nearbyDoor = !nearbyTerminal && player.grounded ? findNearbyDoor() : null;
+    interactButton.hidden = !nearbyTerminal && !nearbyDoor;
+    if (nearbyTerminal) {
+      interactButton.textContent = "E · ТЕРМИНАЛ ГОРОДА";
+      interactButton.setAttribute("aria-label", "Открыть терминал выбора районов города");
+    } else if (nearbyDoor) {
       interactButton.textContent = "E · ПЕРЕЙТИ: " + nearbyDoor.name;
       interactButton.setAttribute("aria-label", "Перейти: " + nearbyDoor.name);
     }
